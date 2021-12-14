@@ -77,6 +77,9 @@
   .auto-grid > * + * {
     margin-top: unset;
   }
+  @media(min-width:1800px){
+  grid-template-columns: repeat(auto-fill, minmax(600px, 1fr));
+  }
 }
 
 /*
