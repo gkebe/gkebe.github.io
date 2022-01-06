@@ -1,0 +1,106 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Your Website</title>
+<script type="text/javascript" src="alfred.json"></script>
+<style>
+button{
+display:block;
+margin:10px 0;
+}
+</style>
+<script>
+var alfred_data = JSON.parse(alfred);
+alfred_tasks = Object.keys(alfred_data);
+function watchVideo(video, task_){
+document.body.innerHTML = "";
+var btn = document.createElement("button");
+var t = document.createTextNode("Back");
+btn.appendChild(t);
+(function (task) {
+            btn.addEventListener('click', function(){
+                clickBtn(task)
+            });
+        })(task_);
+document.body.appendChild(btn);
+var video_tag = document.createElement("video");
+var video_source = document.createElement("source");
+video_source.src=video;
+video_source.type="video/mp4";
+video_tag.appendChild(video_source);
+video_tag.controls = true;
+document.body.appendChild(video_tag);
+video_tag.playbackRate = 2;
+var newScript2 = document.createElement("script");
+newScript2.type="text/javascript";
+newScript2.src ="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+document.body.appendChild(newScript2);
+
+var newScript1 = document.createElement("script");
+newScript1.type="module";
+newScript1.src = "app.js";
+document.body.appendChild(newScript1);
+}
+function clickBtn(task) {
+document.body.innerHTML = "";
+var btn = document.createElement("button");
+var t = document.createTextNode("Back");
+btn.appendChild(t);
+btn.addEventListener("click", printBtn);
+document.body.appendChild(btn);
+alfred_videos = alfred_data[task];
+console.log(task)
+for (var i = 0; i < alfred_videos.length; i++) {
+                       var btn = document.createElement("button");
+                       var t = document.createTextNode(alfred_videos[i]);
+                       btn.appendChild(t);
+                       document.body.appendChild(btn);
+                       (function (video) {
+            btn.addEventListener('click', function(){
+                watchVideo(video, task);
+            });
+        })(alfred_videos[i]);
+                    }
+var newScript2 = document.createElement("script");
+newScript2.type="text/javascript";
+newScript2.src ="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+document.body.appendChild(newScript2);
+
+var newScript1 = document.createElement("script");
+newScript1.type="module";
+newScript1.src = "app.js";
+document.body.appendChild(newScript1);
+}
+function printBtn() {
+document.body.innerHTML = "";
+                    for (var i = 0; i < alfred_tasks.length; i++) {
+                       var btn = document.createElement("button");
+                       var t = document.createTextNode(alfred_tasks[i]);
+                       btn.appendChild(t);
+                       
+                       (function (task) {
+            btn.addEventListener('click', function(){
+                clickBtn(task)
+            });
+        })(alfred_tasks[i]);
+        
+                       document.body.appendChild(btn);
+                    }
+var newScript2 = document.createElement("script");
+newScript2.type="text/javascript";
+newScript2.src ="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+document.body.appendChild(newScript2);
+
+var newScript1 = document.createElement("script");
+newScript1.type="module";
+newScript1.src = "app.js";
+document.body.appendChild(newScript1);
+  
+                }
+</script>
+
+
+</head>
+<body onload="printBtn();">
+</body>
+</html>
