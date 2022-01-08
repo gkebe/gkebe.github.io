@@ -8,11 +8,105 @@ button{
 display:block;
 margin:10px 0;
 }
+video{
+    display: block;
+    margin-bottom: 10px;
+}
+input[type=checkbox]{
+margin-left:10px;
+}
+h4{
+font-weight:normal;
+margin: 10px 0;
+}
+.navigation_div button{
+display:inline-block;
+margin:0 10px;}
+
+.navigation_div button:first-child{
+margin-left:0px;
+}
+.navigation_div span{
+margin:0 10px;}
+
+.selected_videos{
+margin:50px 0;
+color:blue;
+}
+
 </style>
 <script>
 var alfred_data = JSON.parse(alfred);
 alfred_tasks = Object.keys(alfred_data);
-function watchVideo(video, task_){
+
+var appScript = document.createElement("script");
+appScript.type="text/javascript";
+appScript.src ="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js";
+
+var fsScript = document.createElement("script");
+fsScript.type="text/javascript";
+fsScript.src ="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js";
+
+var authScript = document.createElement("script");
+authScript.type="text/javascript";
+authScript.src ="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js";
+
+var dbScript = document.createElement("script");
+dbScript.type="text/javascript";
+dbScript.src ="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js";
+
+var myScript = document.createElement("script");
+myScript.type="text/javascript";
+myScript.src = "app.js";
+
+appScript.onload = function () {
+    document.body.appendChild(authScript);
+};
+
+authScript.onload = function () {
+    document.body.appendChild(dbScript);
+};
+
+dbScript.onload = function () {
+    document.body.appendChild(fsScript);
+};
+
+fsScript.onload = function () {
+    document.body.appendChild(myScript);
+};
+function addVideo(id, url, task, cur_index){
+  database.collection("videos").doc(id).set({
+    url: url
+})
+.then(() => {
+    watchVideo(url, task, cur_index);
+})
+.catch((error) => {
+    console.error("Error writing document: ", error);
+});
+}
+
+function removeVideo(id, url, task, cur_index){
+  database.collection("videos").doc(id).delete().then(() => {
+    watchVideo(url, task, cur_index);
+}).catch((error) => {
+    console.error("Error removing document: ", error);
+});
+}
+
+function removeVideo_(id, url){
+  database.collection("videos").doc(id).delete().then(() => {
+    selected_videos();
+}).catch((error) => {
+    console.error("Error removing document: ", error);
+});
+}
+
+async function watchVideo(video, task_, cur_index){
+const videos = await database.collection('videos').get();
+all_ids = videos.docs.map(doc => doc.id);
+splits = video.split("/");
+id = splits[splits.length-3]+"_"+splits[splits.length-2];
 document.body.innerHTML = "";
 var btn = document.createElement("button");
 var t = document.createTextNode("Back");
@@ -23,6 +117,25 @@ btn.appendChild(t);
             });
         })(task_);
 document.body.appendChild(btn);
+
+var h4 = document.createElement("h4");
+var h4_b = document.createElement("b");
+h4_bt = document.createTextNode("Task: ")
+var h4_t = document.createTextNode(task_);
+h4_b.appendChild(h4_bt);
+h4.appendChild(h4_b);
+h4.appendChild(h4_t);
+document.body.appendChild(h4);
+
+var h4 = document.createElement("h4");
+var h4_b = document.createElement("b");
+h4_bt = document.createTextNode("Video: ")
+var h4_t = document.createTextNode(video);
+h4_b.appendChild(h4_bt);
+h4.appendChild(h4_b);
+h4.appendChild(h4_t);
+document.body.appendChild(h4);
+
 var video_tag = document.createElement("video");
 var video_source = document.createElement("source");
 video_source.src=video;
@@ -30,17 +143,151 @@ video_source.type="video/mp4";
 video_tag.appendChild(video_source);
 video_tag.controls = true;
 document.body.appendChild(video_tag);
-video_tag.playbackRate = 2;
-var newScript2 = document.createElement("script");
-newScript2.type="text/javascript";
-newScript2.src ="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-document.body.appendChild(newScript2);
+video_tag.playbackRate = 3;
 
-var newScript1 = document.createElement("script");
-newScript1.type="module";
-newScript1.src = "app.js";
-document.body.appendChild(newScript1);
+
+if (all_ids.includes(id))
+{
+var unselect = document.createElement("button");
+var t_ = document.createTextNode("Remove Video");
+unselect.appendChild(t_);
+(function (id_, url, task__, cur_index_) {
+            unselect.addEventListener('click', function(){
+                removeVideo(id_, url, task__, cur_index_)
+            });
+        })(id, video, task_, cur_index);
+document.body.appendChild(unselect);
 }
+else{
+var select = document.createElement("button");
+var t_ = document.createTextNode("Add Video");
+select.appendChild(t_);
+(function (id_, url, task__, cur_index_) {
+            select.addEventListener('click', function(){
+                addVideo(id_, url, task__, cur_index_)
+            });
+        })(id, video, task_, cur_index);
+document.body.appendChild(select);
+}
+
+var navigation_div = document.createElement("div");
+navigation_div.classList.add("navigation_div");
+
+if (cur_index>1){
+var previous = document.createElement("button");
+var previous_t = document.createTextNode("Previous");
+previous.appendChild(previous_t);
+(function (previous_video, previous_task, previous_index) {
+            previous.addEventListener('click', function(){
+            console.log(previous_video, previous_task, previous_index);
+                watchVideo(previous_video, previous_task, previous_index);
+            });
+        })(alfred_data[task_][cur_index-2], task_, cur_index-1);
+navigation_div.appendChild(previous);
+}
+var number_span = document.createElement("span");
+var video_number = document.createTextNode(cur_index+"/"+alfred_data[task_].length);
+number_span.appendChild(video_number);
+navigation_div.appendChild(number_span);
+
+if (cur_index<alfred_data[task_].length){
+var next = document.createElement("button");
+var next_t = document.createTextNode("Next");
+next.appendChild(next_t);
+(function (next_video, next_task, next_index) {
+            next.addEventListener('click', function(){
+                watchVideo(next_video, next_task, next_index)
+            });
+        })(alfred_data[task_][cur_index], task_, cur_index+1);
+navigation_div.appendChild(next);
+}
+document.body.appendChild(navigation_div);
+
+document.body.appendChild(appScript);
+}
+async function watchVideo_(video, cur_index){
+const videos = await database.collection('videos').get();
+alfred_videos = videos.docs.map(doc => doc.data()["url"]);
+splits = video.split("/");
+id = splits[splits.length-3]+"_"+splits[splits.length-2];
+document.body.innerHTML = "";
+var btn = document.createElement("button");
+var t = document.createTextNode("Back");
+btn.appendChild(t);
+btn.addEventListener('click', selected_videos);
+document.body.appendChild(btn);
+
+var h4 = document.createElement("h4");
+var h4_b = document.createElement("b");
+h4_bt = document.createTextNode("Selected Videos")
+h4_b.appendChild(h4_bt);
+h4.appendChild(h4_b);
+document.body.appendChild(h4);
+
+var h4 = document.createElement("h4");
+var h4_b = document.createElement("b");
+h4_bt = document.createTextNode("Video: ")
+var h4_t = document.createTextNode(video);
+h4_b.appendChild(h4_bt);
+h4.appendChild(h4_b);
+h4.appendChild(h4_t);
+document.body.appendChild(h4);
+
+var video_tag = document.createElement("video");
+var video_source = document.createElement("source");
+video_source.src=video;
+video_source.type="video/mp4";
+video_tag.appendChild(video_source);
+video_tag.controls = true;
+document.body.appendChild(video_tag);
+video_tag.playbackRate = 3;
+
+var unselect = document.createElement("button");
+var t_ = document.createTextNode("Remove Video");
+unselect.appendChild(t_);
+(function (id_, url) {
+            unselect.addEventListener('click', function(){
+                removeVideo_(id_, url)
+            });
+        })(id, video);
+document.body.appendChild(unselect);
+
+var navigation_div = document.createElement("div");
+navigation_div.classList.add("navigation_div");
+
+if (cur_index>1){
+var previous = document.createElement("button");
+var previous_t = document.createTextNode("Previous");
+previous.appendChild(previous_t);
+(function (previous_video, previous_index) {
+            previous.addEventListener('click', function(){
+            console.log(previous_video, previous_index);
+                watchVideo_(previous_video, previous_index);
+            });
+        })(alfred_videos[cur_index-2], cur_index-1);
+navigation_div.appendChild(previous);
+}
+var number_span = document.createElement("span");
+var video_number = document.createTextNode(cur_index+"/"+alfred_videos.length);
+number_span.appendChild(video_number);
+navigation_div.appendChild(number_span);
+
+if (cur_index<alfred_videos.length){
+var next = document.createElement("button");
+var next_t = document.createTextNode("Next");
+next.appendChild(next_t);
+(function (next_video, next_index) {
+            next.addEventListener('click', function(){
+                watchVideo_(next_video, next_index)
+            });
+        })(alfred_videos[cur_index], cur_index+1);
+navigation_div.appendChild(next);
+}
+document.body.appendChild(navigation_div);
+
+document.body.appendChild(appScript);
+}
+
 function clickBtn(task) {
 document.body.innerHTML = "";
 var btn = document.createElement("button");
@@ -55,21 +302,36 @@ for (var i = 0; i < alfred_videos.length; i++) {
                        var t = document.createTextNode(alfred_videos[i]);
                        btn.appendChild(t);
                        document.body.appendChild(btn);
-                       (function (video) {
+                       (function (video, cur_index) {
             btn.addEventListener('click', function(){
-                watchVideo(video, task);
+                watchVideo(video, task, cur_index);
             });
-        })(alfred_videos[i]);
+        })(alfred_videos[i], i+1);
                     }
-var newScript2 = document.createElement("script");
-newScript2.type="text/javascript";
-newScript2.src ="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-document.body.appendChild(newScript2);
+document.body.appendChild(appScript);
+}
 
-var newScript1 = document.createElement("script");
-newScript1.type="module";
-newScript1.src = "app.js";
-document.body.appendChild(newScript1);
+async function selected_videos(){
+const videos = await database.collection('videos').get();
+alfred_videos = videos.docs.map(doc => doc.data()["url"]);
+document.body.innerHTML = "";
+var btn = document.createElement("button");
+var t = document.createTextNode("Back");
+btn.appendChild(t);
+btn.addEventListener("click", printBtn);
+document.body.appendChild(btn);
+for (var i = 0; i < alfred_videos.length; i++) {
+                       var btn = document.createElement("button");
+                       var t = document.createTextNode(alfred_videos[i]);
+                       btn.appendChild(t);
+                       document.body.appendChild(btn);
+                       (function (video, cur_index) {
+            btn.addEventListener('click', function(){
+                watchVideo_(video, cur_index);
+            });
+        })(alfred_videos[i], i+1);
+                    }
+document.body.appendChild(appScript);
 }
 function printBtn() {
 document.body.innerHTML = "";
@@ -86,15 +348,13 @@ document.body.innerHTML = "";
         
                        document.body.appendChild(btn);
                     }
-var newScript2 = document.createElement("script");
-newScript2.type="text/javascript";
-newScript2.src ="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-document.body.appendChild(newScript2);
-
-var newScript1 = document.createElement("script");
-newScript1.type="module";
-newScript1.src = "app.js";
-document.body.appendChild(newScript1);
+var btn = document.createElement("button");
+btn.classList.add("selected_videos");
+                       var t = document.createTextNode("Selected Videos");
+                       btn.appendChild(t);
+                       btn.addEventListener('click', selected_videos);
+                       document.body.appendChild(btn);
+document.body.appendChild(appScript);
   
                 }
 </script>
