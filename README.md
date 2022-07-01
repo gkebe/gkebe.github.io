@@ -1,4 +1,5 @@
 # Academic Responsive (AR) Website Template
+docker run --rm -it --privileged -v $ALFREDPATH:/home/$USER/alfred -v ~/.ssh:/home/$USER/.ssh -v ~/.torch:/home/$USER/.torch -e ALFRED_ROOT=/home/$USER/alfred -e HOME=/home/$USER -p 8888:8888 --user $USER --ipc=host --network=host -v /usr/bin/nvidia-xconfig:/usr/bin/nvidia-xconfig --gpus all  $EXTRA ai2thor-docker bash
 
 ## A Responsive HTML5/CSS3 template for setting up an academic website.
 
